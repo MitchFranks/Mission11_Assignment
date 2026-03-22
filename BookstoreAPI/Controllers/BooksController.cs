@@ -104,5 +104,113 @@ namespace BookstoreAPI.Controllers
 
             return Ok(categories);
         }
+
+        // GET: api/Books/{id}
+        // This endpoint returns a single book by its ID.
+        // The admin edit form uses this to load the current data for a book before editing.
+        // The {id} in the route is a URL parameter -- for example, /api/Books/3 returns book #3.
+        [HttpGet("{id}")]
+        public ActionResult<Book> GetBook(int id)
+        {
+            // .Find() searches for a book with the matching primary key (BookID).
+            // If no book has that ID, it returns null.
+            var book = _context.Books.Find(id);
+
+            if (book == null)
+            {
+                // Return a 404 "Not Found" response if the book doesn't exist
+                return NotFound();
+            }
+
+            return Ok(book);
+        }
+
+        // POST: api/Books
+        // This endpoint CREATES a new book in the database.
+        // The frontend sends the book data in the request body as JSON.
+        // [FromBody] tells ASP.NET to read the JSON and convert it into a Book object.
+        [HttpPost]
+        public ActionResult<Book> CreateBook([FromBody] Book book)
+        {
+            // Add the new book to the Books table in the database.
+            // At this point it's only tracked in memory -- not saved yet.
+            _context.Books.Add(book);
+
+            // SaveChanges() actually executes the INSERT SQL statement
+            // and writes the new book to the SQLite database file.
+            _context.SaveChanges();
+
+            // Return a 201 "Created" response with the new book's data.
+            // CreatedAtAction also sets the Location header to the URL
+            // where this new book can be retrieved (e.g., /api/Books/17).
+            return CreatedAtAction(nameof(GetBook), new { id = book.BookID }, book);
+        }
+
+        // PUT: api/Books/{id}
+        // This endpoint UPDATES an existing book in the database.
+        // The frontend sends the updated book data in the request body as JSON.
+        // The {id} in the URL must match the BookID in the body -- this is a safety check.
+        [HttpPut("{id}")]
+        public IActionResult UpdateBook(int id, [FromBody] Book book)
+        {
+            // Safety check: make sure the ID in the URL matches the ID in the request body.
+            // This prevents accidentally updating the wrong book.
+            if (id != book.BookID)
+            {
+                return BadRequest("The BookID in the URL does not match the BookID in the request body.");
+            }
+
+            // Check that the book actually exists before trying to update it
+            var existingBook = _context.Books.Find(id);
+            if (existingBook == null)
+            {
+                return NotFound();
+            }
+
+            // Update each field of the existing book with the new values.
+            // We update field-by-field instead of replacing the whole object
+            // because EF Core is already tracking the existingBook entity.
+            existingBook.Title = book.Title;
+            existingBook.Author = book.Author;
+            existingBook.Publisher = book.Publisher;
+            existingBook.ISBN = book.ISBN;
+            existingBook.Classification = book.Classification;
+            existingBook.Category = book.Category;
+            existingBook.PageCount = book.PageCount;
+            existingBook.Price = book.Price;
+
+            // SaveChanges() executes the UPDATE SQL statement to save the changes
+            _context.SaveChanges();
+
+            // Return 204 "No Content" -- the standard response for a successful update
+            // that doesn't need to return any data back.
+            return NoContent();
+        }
+
+        // DELETE: api/Books/{id}
+        // This endpoint DELETES a book from the database by its ID.
+        // For example, DELETE /api/Books/3 removes book #3 permanently.
+        [HttpDelete("{id}")]
+        public IActionResult DeleteBook(int id)
+        {
+            // Look up the book by its primary key
+            var book = _context.Books.Find(id);
+
+            if (book == null)
+            {
+                // Can't delete something that doesn't exist
+                return NotFound();
+            }
+
+            // Remove the book from the EF Core tracked entities
+            _context.Books.Remove(book);
+
+            // SaveChanges() executes the DELETE SQL statement
+            _context.SaveChanges();
+
+            // Return 204 "No Content" to confirm the deletion was successful
+            return NoContent();
+        }
     }
 }
+

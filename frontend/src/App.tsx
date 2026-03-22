@@ -18,10 +18,11 @@
 //   3. Bootstrap Card component with shadow (new - not covered in class)
 // ============================================================
 
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, NavLink } from 'react-router-dom';
 import BookList from './components/BookList';
 import CartPage from './components/CartPage';
 import CartSummary from './components/CartSummary';
+import AdminBooks from './components/AdminBooks';
 
 function App() {
   return (
@@ -34,15 +35,24 @@ function App() {
           ============================================================ */}
       <nav className="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
         <div className="container">
-          {/* Site brand/logo - clicking it goes to the home page */}
-          <a className="navbar-brand fw-bold" href="/">
+          {/* Site brand/logo - clicking it goes to the home page.
+              We use NavLink instead of <a> so React Router handles the navigation
+              without a full page reload (keeps the cart state intact). */}
+          <NavLink className="navbar-brand fw-bold" to="/">
             📚 Online Bookstore
-          </a>
+          </NavLink>
 
-          {/* Cart link in the navbar */}
-          <a className="btn btn-outline-light btn-sm" href="/cart">
-            🛒 Cart
-          </a>
+          {/* Navigation links on the right side of the navbar */}
+          <div className="d-flex gap-2">
+            {/* Admin page link for managing books (add/edit/delete) */}
+            <NavLink className="btn btn-outline-warning btn-sm" to="/adminbooks">
+              ⚙️ Admin
+            </NavLink>
+            {/* Cart link */}
+            <NavLink className="btn btn-outline-light btn-sm" to="/cart">
+              🛒 Cart
+            </NavLink>
+          </div>
         </div>
       </nav>
 
@@ -67,10 +77,12 @@ function App() {
             </div>
 
             {/* Routes: React Router renders the correct component based on the URL.
-                "/" shows the book list, "/cart" shows the full cart page. */}
+                "/" shows the book list, "/cart" shows the full cart page,
+                "/adminbooks" shows the admin page for adding/editing/deleting books. */}
             <Routes>
               <Route path="/" element={<BookList />} />
               <Route path="/cart" element={<CartPage />} />
+              <Route path="/adminbooks" element={<AdminBooks />} />
             </Routes>
           </div>
 
@@ -91,7 +103,7 @@ function App() {
           FOOTER - Simple footer using Bootstrap text utilities
           ============================================================ */}
       <footer className="text-center text-muted py-4 mt-5 border-top">
-        <small>© 2026 Online Bookstore — IS 413 Mission 12</small>
+        <small>© 2026 Online Bookstore — IS 413 Mission 13</small>
       </footer>
     </div>
   );
