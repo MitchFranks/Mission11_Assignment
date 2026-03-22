@@ -14,9 +14,41 @@
 // can call useCart() to read or modify the cart.
 // ============================================================
 
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { Book, CartItem } from '../types/Book';
+
+// This is the key we use to store the cart in the browser's localStorage.
+// localStorage is like a small database built into every browser -- data
+// saved here survives page refreshes and even closing/reopening the browser.
+const CART_STORAGE_KEY = 'bookstore-cart';
+
+// Helper function: Load saved cart data from localStorage.
+// If nothing is saved yet (first visit), return an empty array.
+// We wrap this in a try/catch because localStorage can sometimes fail
+// (e.g., if the browser is in private mode with storage disabled).
+function loadCartFromStorage(): CartItem[] {
+  try {
+    const saved = localStorage.getItem(CART_STORAGE_KEY);
+    if (saved) {
+      return JSON.parse(saved) as CartItem[];
+    }
+  } catch {
+    // If parsing fails for any reason, start with an empty cart
+  }
+  return [];
+}
+
+// Helper function: Save the current cart to localStorage.
+// JSON.stringify converts our JavaScript array into a text string
+// because localStorage can only store text, not objects.
+function saveCartToStorage(items: CartItem[]): void {
+  try {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+  } catch {
+    // If storage is full or unavailable, silently fail
+  }
+}
 
 // Define what functions and data the cart context will provide.
 // Any component that calls useCart() will have access to all of these.
@@ -39,8 +71,17 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 // every page and component inside it can access the cart.
 export function CartProvider({ children }: { children: ReactNode }) {
   // This state array holds all the items in the shopping cart.
-  // useState keeps this data alive as long as the app is running (session persistence).
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  // We initialize it by loading any previously saved cart from localStorage.
+  // This means the cart survives page refreshes -- if the user had items in
+  // their cart and refreshes the page, the items will still be there.
+  const [cartItems, setCartItems] = useState<CartItem[]>(loadCartFromStorage);
+
+  // useEffect: Every time cartItems changes (add, remove, update quantity),
+  // automatically save the updated cart to localStorage so it persists.
+  // The [cartItems] dependency array means this runs after every cart change.
+  useEffect(() => {
+    saveCartToStorage(cartItems);
+  }, [cartItems]);
 
   // addToCart: Called when the user clicks "Add to Cart" on a book.
   // If the book is already in the cart, we increase its quantity by 1.
@@ -92,9 +133,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
     );
   };
 
-  // clearCart: Resets the cart to an empty array.
+  // clearCart: Resets the cart to an empty array and removes saved data.
+  // The useEffect above will also save the empty array to localStorage,
+  // but we explicitly remove it here for a clean slate.
   const clearCart = () => {
     setCartItems([]);
+    localStorage.removeItem(CART_STORAGE_KEY);
   };
 
   // getTotalItems: Adds up all the quantities across every item in the cart.
