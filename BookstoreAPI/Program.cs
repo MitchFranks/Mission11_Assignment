@@ -11,28 +11,22 @@ builder.Services.AddDbContext<BookstoreContext>(options =>
 // Register controller services so the API endpoints are discovered
 builder.Services.AddControllers();
 
-// Configure CORS to allow the React frontend (running on port 3000) to call the API
+// Configure CORS to allow the React frontend to call the API.
+// We allow localhost (for local development) and any Azure-deployed frontend.
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", policy =>
     {
-        policy.WithOrigins("http://localhost:3000")
+        policy.AllowAnyOrigin()
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
 });
 
-builder.Services.AddOpenApi();
-
 var app = builder.Build();
 
 // Enable the CORS policy for all requests
 app.UseCors("AllowReactApp");
-
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
 
 // Map controller routes (e.g., api/Books)
 app.MapControllers();

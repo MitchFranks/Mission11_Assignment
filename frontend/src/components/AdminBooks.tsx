@@ -19,9 +19,7 @@
 
 import { useState, useEffect } from 'react';
 import type { Book } from '../types/Book';
-
-// Base URL for the backend API
-const API_URL = 'http://localhost:5156/api/Books';
+import { API_URL } from '../config';
 
 // This is the blank/default state for the book form.
 // When adding a new book, the form starts with these empty values.

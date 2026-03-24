@@ -17,9 +17,7 @@ import { useState, useEffect } from 'react';
 import type { Book, PaginatedBooksResponse } from '../types/Book';
 import { useCart } from '../context/CartContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-
-// Base URL for the ASP.NET Core API running on the backend server
-const API_URL = 'http://localhost:5156/api/Books';
+import { API_URL } from '../config';
 
 function BookList() {
   // ---- React Router hooks ----
